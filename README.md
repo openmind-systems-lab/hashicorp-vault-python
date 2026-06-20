@@ -1,10 +1,34 @@
-# 🔐 HashiCorp Vault Agent Injector Demo (Python)
+<p align="center">
+  <img src="https://raw.githubusercontent.com/openmind-systems-lab/.github/main/profile/logo.png" width="350">
+</p>
 
-This project demonstrates how to inject a secret from HashiCorp Vault into a Kubernetes Pod using the Vault Agent Injector.
+<h1 align="center">HashiCorp Vault Python Playground</h1>
 
-The application is a simple Python HTTP server that verifies the injected secret is available.
+<p align="center">
+An Open Source Proof of Concept demonstrating secret injection into Kubernetes Pods using HashiCorp Vault Agent Injector.
+</p>
+
+<p align="center">
+
+![License](https://img.shields.io/badge/license-MIT-blue)
+![Open Source](https://img.shields.io/badge/Open%20Source-Yes-brightgreen)
+![Proof of Concept](https://img.shields.io/badge/Type-Proof%20of%20Concept-orange)
+![Kubernetes](https://img.shields.io/badge/Kubernetes-Secret%20Injection-blue)
+![Association](https://img.shields.io/badge/OpenMind%20Systems%20Lab-Loi%201901-blue)
+
+</p>
 
 ---
+
+# 📖 Overview
+
+This Proof of Concept demonstrates how **HashiCorp Vault Agent Injector** injects secrets into Kubernetes Pods without embedding sensitive information inside container images.
+
+A simple Python HTTP server validates that the injected secret is available at runtime.
+
+---
+
+# 🏗️ Architecture
 
 <p align="center">
   <img src="img/schema.png" width="900">
@@ -12,26 +36,39 @@ The application is a simple Python HTTP server that verifies the injected secret
 
 ---
 
-## ✅ Prerequisites
+# 🎯 Objective
 
-- Kubernetes cluster
+This Proof of Concept demonstrates how to:
+
+- Deploy HashiCorp Vault on Kubernetes.
+- Enable Vault Agent Injector.
+- Store secrets inside Vault.
+- Authenticate Kubernetes workloads.
+- Inject secrets into Pods automatically.
+- Access injected secrets from a Python application.
+
+---
+
+# ⚙️ Prerequisites
+
+- Kubernetes Cluster
 - kubectl
-- Helm
+- Helm 3
 - Docker
 - Vault CLI (optional)
 
 ---
 
-## 🚀 1. Install Vault
+# 📦 Install HashiCorp Vault
 
-Add the HashiCorp Helm repository:
+Add the Helm repository:
 
 ```bash
 helm repo add hashicorp https://helm.releases.hashicorp.com
 helm repo update
 ```
 
-Install Vault in development mode with the injector enabled:
+Install Vault:
 
 ```bash
 helm install vault hashicorp/vault \
@@ -39,61 +76,53 @@ helm install vault hashicorp/vault \
   --set "injector.enabled=true"
 ```
 
-Wait until Vault is ready:
+---
+
+# 🔍 Verification
+
+Verify that Vault is running:
 
 ```bash
 kubectl get pods
 ```
 
-Expected:
+Expected output:
 
-```
+```text
 vault-0
 vault-agent-injector-xxxxx
 ```
 
 ---
 
-## 🔎 2. Access Vault
+# 🔒 Configure Vault
 
-Open a shell inside the Vault pod:
+Open a shell inside the Vault Pod:
 
 ```bash
 kubectl exec -it vault-0 -- sh
 ```
 
-Verify Vault is running:
+Verify Vault status:
 
 ```bash
 vault status
 ```
 
----
-
-## 🗄️ 3. Enable the KV Secrets Engine
+Enable the KV Secrets Engine:
 
 ```bash
 vault secrets enable -path=secret kv-v2
 ```
 
----
-
-## 📝 4. Create the Secret
+Create the secret:
 
 ```bash
 vault kv put secret/python-vault/realm \
   realm_xml='<realm><users><user><name>john</name></user></users></realm>'
 ```
 
-Verify:
-
-```bash
-vault kv get secret/python-vault/realm
-```
-
----
-
-## 🛡️ 5. Create the Vault Policy
+Create the Vault policy:
 
 ```bash
 vault policy write python-vault-read-policy - <<EOF
@@ -103,21 +132,13 @@ path "secret/data/python-vault/*" {
 EOF
 ```
 
-Verify:
-
-```bash
-vault policy read python-vault-read-policy
-```
-
----
-
-## 🔑 6. Enable Kubernetes Authentication
+Enable Kubernetes authentication:
 
 ```bash
 vault auth enable kubernetes
 ```
 
-Configure the Kubernetes authentication backend:
+Configure Kubernetes authentication:
 
 ```bash
 vault write auth/kubernetes/config \
@@ -125,9 +146,7 @@ vault write auth/kubernetes/config \
   kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 ```
 
----
-
-## 👤 7. Create the Kubernetes Role
+Create the Kubernetes role:
 
 ```bash
 vault write auth/kubernetes/role/python-vault-policy-role \
@@ -137,7 +156,7 @@ vault write auth/kubernetes/role/python-vault-policy-role \
   ttl=1h
 ```
 
-Exit the Vault pod:
+Exit the Vault Pod:
 
 ```bash
 exit
@@ -145,7 +164,9 @@ exit
 
 ---
 
-## 🐳 8. Build the Docker Image
+# 🏗️ Build the Demo Application
+
+Build the Docker image:
 
 ```bash
 docker build -t python-vault-validation:1.0.0 .
@@ -159,29 +180,31 @@ kind load docker-image python-vault-validation:1.0.0
 
 ---
 
-## ☸️ 9. Deploy the Application
+# 🚀 Deploy the Demo Application
+
+Deploy the application:
 
 ```bash
 kubectl apply -f python-app-deployment.yaml
 ```
 
-Wait until the pod is ready:
+---
+
+# 🔍 Verification
+
+Verify that the Pod is running:
 
 ```bash
 kubectl get pods
 ```
 
-Expected:
+Expected output:
 
-```
+```text
 python-vault-app-deployment-xxxxx   2/2   Running
 ```
 
----
-
-## 📦 10. Verify the Secret Injection
-
-List injected files:
+Verify the injected secret:
 
 ```bash
 kubectl exec deploy/python-vault-app-deployment \
@@ -189,9 +212,9 @@ kubectl exec deploy/python-vault-app-deployment \
   -- ls -la /vault/secrets
 ```
 
-Expected:
+Expected output:
 
-```
+```text
 realm.xml
 ```
 
@@ -205,21 +228,21 @@ kubectl exec deploy/python-vault-app-deployment \
 
 ---
 
-## 🌐 11. Test the Application
+# 🧪 Testing
 
-Forward the service:
+Forward the application:
 
 ```bash
 kubectl port-forward svc/python-vault-app-service 8080:8080
 ```
 
-Health endpoint:
+Verify the health endpoint:
 
 ```bash
 curl http://localhost:8080/_ping
 ```
 
-Expected:
+Expected output:
 
 ```json
 {
@@ -228,13 +251,13 @@ Expected:
 }
 ```
 
-Secret endpoint:
+Verify the injected secret:
 
 ```bash
 curl http://localhost:8080/secret-required
 ```
 
-Expected:
+Expected output:
 
 ```json
 {
@@ -247,33 +270,29 @@ Expected:
 
 ---
 
-## 🛠️ Troubleshooting
+# 📚 What You Will Learn
 
-### ❌ Authentication backend not enabled
+After completing this Proof of Concept, you will understand how to:
 
-Error:
+- Install HashiCorp Vault using Helm.
+- Enable Vault Agent Injector.
+- Configure Kubernetes authentication.
+- Create Vault policies and roles.
+- Inject secrets into Kubernetes Pods.
+- Consume injected secrets from a Python application.
+- Apply Kubernetes secret management best practices.
 
-```text
-no handler for route auth/kubernetes/role/...
-```
+---
 
-Solution:
+# 🛠️ Troubleshooting
+
+Authentication backend not enabled:
 
 ```bash
 vault auth enable kubernetes
 ```
 
----
-
-### ❌ Backend configuration missing
-
-Error:
-
-```text
-could not load backend configuration
-```
-
-Solution:
+Backend configuration missing:
 
 ```bash
 vault write auth/kubernetes/config \
@@ -281,37 +300,22 @@ vault write auth/kubernetes/config \
   kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt
 ```
 
----
-
-### ⏳ Pod stuck in Init:0/1
-
-Check the init container:
+Pod stuck during initialization:
 
 ```bash
-kubectl logs deploy/python-vault-app-deployment -c vault-agent-init
+kubectl logs deploy/python-vault-app-deployment \
+  -c vault-agent-init
 ```
 
----
-
-### 🔍 Verify the Secret
-
-Verify the secret exists in Vault:
+Verify the secret inside Vault:
 
 ```bash
 vault kv get secret/python-vault/realm
 ```
 
-Verify the injected file:
-
-```bash
-kubectl exec deploy/python-vault-app-deployment \
-  -c python-vault-container \
-  -- ls -la /vault/secrets
-```
-
 ---
 
-## 🧹 Cleanup
+# 🧹 Cleanup
 
 Delete the application:
 
@@ -324,3 +328,28 @@ Uninstall Vault:
 ```bash
 helm uninstall vault
 ```
+
+---
+
+# 📚 References
+
+- https://developer.hashicorp.com/vault
+- https://developer.hashicorp.com/vault/docs/platform/k8s/injector
+
+---
+
+# 🏛 About OpenMind Systems Lab
+
+OpenMind Systems Lab is an independent French non-profit association dedicated to research, experimental development and technical benchmarking in Cloud Native technologies.
+
+Our mission is to produce practical, reproducible and educational Open Source Proofs of Concept covering Kubernetes, Platform Engineering, Distributed Messaging, Infrastructure Security and Artificial Intelligence.
+
+GitHub Organization:
+
+https://github.com/openmind-systems-lab
+
+---
+
+<p align="center">
+Made with ❤️ by OpenMind Systems Lab
+</p>
